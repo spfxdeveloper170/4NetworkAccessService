@@ -1,0 +1,29 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "b3dc0339-d11d-4e5d-9ca0-832c8f682d84",
+  "alias": "NetworkAccessServiceWebPart",
+  "componentType": "WebPart",
+
+ 
+  "version": "*",
+  "manifestVersion": 2,
+ 
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab", "SharePointFullPage"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [{
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
+    "group": { "default": "Advanced" },
+    "title": { "default": "Network Access Service" },
+    "description": { "default": "Network Access Service description" },
+    "officeFabricIconFontName": "MyNetwork",
+    "properties": {
+      "description": "Network Access Service",
+       "Apilink":"https://mcitstgapim.mcit.gov.qa/ivantitest/new",
+      "subscriptionId":"C278ABDF504E4CBB9678DFAA61B5FCE1",
+      "OcpApimKey":"ba47658772b3473cbd9eb045e856e9fc",
+      "Subject":"Network Access Service Testing"
+    }
+  }]
+}
