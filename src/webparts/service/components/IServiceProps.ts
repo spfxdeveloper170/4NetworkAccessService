@@ -4,6 +4,11 @@ export interface IServiceProps {
   subscriptionId: string;
   OcpApimKey: string;
   Subject: string;
+   isredirect:boolean;
+
+    attachmentApilink: string;
+  UserRecIdApilink: string;
+  Category: string;
 }
 export interface IUserProfile {
   displayName: string;

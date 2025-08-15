@@ -132,9 +132,9 @@ const ServiceRequest: React.FC<IServiceProps> = (props) => {
         serviceReqData: {
           Subject: `${props.Subject}`,
           Symptom: formData.description, // "It allows employees to make Mobile and International calls with standards features like Voicemail and Call Forwarding",
-          Category: "Calling",
-          CreatedBy: "Ashish",
-          Subcategory: "Access",
+          Category: props.Category,// "Calling",
+          CreatedBy:formData.requestedBy,// "Ashish",
+         // Subcategory: "Access",
         },
         subscriptionId: props.subscriptionId,
       };
@@ -143,7 +143,7 @@ const ServiceRequest: React.FC<IServiceProps> = (props) => {
         headers: {
           "Content-Type": "application/json",
           "Ocp-Apim-Subscription-Key": `${props.OcpApimKey}`,
-          Email: "pmishra@mcit.gov.qa",
+          Email:formData.requestedFor// "pmishra@mcit.gov.qa",
         },
         body: JSON.stringify(payload),
       });
@@ -152,15 +152,53 @@ const ServiceRequest: React.FC<IServiceProps> = (props) => {
         const errorText = await response.text();
         throw new Error(`Request failed: ${response.status} - ${errorText}`);
       }
-      setModalHeading("Success");
-      setModalMessage("Your Request has been submitted successfully.");
-      setAlertsection("Accepted");
-      setIconLoad("SkypeCircleCheck");
-      handleShowModal();
+      if (response.ok) {
+        const rawResponse = await response.text();
+        const jsonStart = rawResponse.indexOf("{");
+        if (jsonStart === -1) {
+          throw new Error("JSON not found in response");
+        }
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+        // Step 2: Extract only the JSON string
+        const jsonString = rawResponse.slice(jsonStart);
+
+        // Step 3: Parse the JSON
+        let parsedData;
+        try {
+          parsedData = JSON.parse(jsonString);
+        } catch (e) {
+          throw new Error("Failed to parse JSON: " + e.message);
+        }
+
+        const requestRecId = parsedData?.ServiceRequests?.[0]?.strRequestRecId;
+        const strRequestNum = parsedData?.ServiceRequests?.[0]?.strRequestNum;
+
+        console.log("requestRecId submitted Hardware Request:", requestRecId);
+        console.log("strRequestNum submitted Hardware Request:", strRequestNum);
+        let flag = true;
+        if (formData.files.length > 0) {
+          flag = false;
+          await saveRequestAttachment(
+            requestRecId,
+            strRequestNum,
+            formData.files
+          );
+        }
+
+        if (flag) {
+          setModalHeading("Success");
+          setModalMessage("Your Request has been submitted successfully.");
+          setAlertsection("Accepted");
+          setIconLoad("SkypeCircleCheck");
+          handleShowModal();
+
+          if (props.isredirect) {
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          }
+        }
+      }
     } catch (error: any) {
       console.error("Error submitting Request:", error);
       setModalHeading("Error");
@@ -170,13 +208,58 @@ const ServiceRequest: React.FC<IServiceProps> = (props) => {
       handleShowModal();
     }
   };
+const saveRequestAttachment = async (
+    recid: string,
+    requestnum: string,
+    formData: any
+  ) => {
+    try {
+      console.log("Attachment function is called");
+      const ApiformData = new FormData();
+      ApiformData.append("ObjectID", recid);
+      ApiformData.append("ObjectType", "ServiceReq#");
+      ApiformData.append("File", formData[0].content);
+      const response = await fetch(props.attachmentApilink, {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": props.OcpApimKey, // "ba47658772b3473cbd9eb045e856e9fc",
+        },
+        body: ApiformData,
+      });
+      if (response.ok) {
+        setModalHeading("Success");
+        setModalMessage("Your Request has been submitted successfully.");
+        setAlertsection("Accepted");
+        setIconLoad("SkypeCircleCheck");
+        handleShowModal();
 
+        if (props.isredirect) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        }
+      }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Request failed: ${response.status} - ${errorText}`);
+      }
+    } catch (error: any) {
+      console.error("Error submitting Attachment:", error);
+      setModalHeading("Error");
+      setModalMessage(error.message);
+      setAlertsection("rejected");
+      setIconLoad("ErrorBadge");
+      handleShowModal();
+    }
+  };
   if (isLoadingUser) {
     return <div>Loading user information...</div>;
   }
   return (
     <>
       <ServiceUIForm
+       OcpApimKey={props.OcpApimKey}
+        UserRecIdApilink={props.UserRecIdApilink}
         context={props.context}
         userprofileAD={userProfileAD}
         EmpId={userProfileAD?.employeeId || ""}

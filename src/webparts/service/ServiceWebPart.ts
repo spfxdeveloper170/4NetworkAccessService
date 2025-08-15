@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDom from 'react-dom';
 import { Version } from '@microsoft/sp-core-library';
 import {
-  type IPropertyPaneConfiguration,
+  type IPropertyPaneConfiguration,PropertyPaneToggle,
   PropertyPaneTextField
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
@@ -15,6 +15,11 @@ export interface IServiceWebPartProps {
   subscriptionId: string;
   OcpApimKey: string;
   Subject:string;
+   isredirect:boolean;
+
+    attachmentApilink: string;
+  UserRecIdApilink: string;
+  Category: string;
 }
 export default class ServiceWebPart extends BaseClientSideWebPart<IServiceWebPartProps> {
   public render(): void {
@@ -25,7 +30,12 @@ export default class ServiceWebPart extends BaseClientSideWebPart<IServiceWebPar
         Apilink:this.properties.Apilink,
         subscriptionId:this.properties.subscriptionId,
         OcpApimKey:this.properties.OcpApimKey,
-        Subject:this.properties.Subject
+        Subject:this.properties.Subject,
+           isredirect: this.properties.isredirect,
+
+         attachmentApilink: this.properties.attachmentApilink,
+        UserRecIdApilink: this.properties.UserRecIdApilink,
+        Category: this.properties.Category,
       }
     );
     ReactDom.render(element, this.domElement);
@@ -45,6 +55,18 @@ export default class ServiceWebPart extends BaseClientSideWebPart<IServiceWebPar
                   label:"API Link",
                   value:this.properties.Apilink,
                 }),
+                  PropertyPaneTextField('attachmentApilink', {
+                  label: "Attachment API Link",
+                  value: this.properties.attachmentApilink,
+                }),
+                PropertyPaneTextField('UserRecIdApilink', {
+                  label: "User RecId API Link",
+                  value: this.properties.UserRecIdApilink,
+                }),
+                PropertyPaneTextField('Category', {
+                  label: "Category",
+                  value: this.properties.Category,
+                }),
                 PropertyPaneTextField('subscriptionId', {
                   label:"subscription Id",
                   value:this.properties.subscriptionId,
@@ -56,6 +78,12 @@ export default class ServiceWebPart extends BaseClientSideWebPart<IServiceWebPar
                 PropertyPaneTextField('Subject', {
                   label:"Service Subject",
                   value:this.properties.OcpApimKey,
+                }),
+                 PropertyPaneToggle('isredirect',{
+                  label:"Is Redirect",
+                  offText:"No",
+                  onText:"Yes",
+                  checked:this.properties.isredirect
                 })
               ]
             }

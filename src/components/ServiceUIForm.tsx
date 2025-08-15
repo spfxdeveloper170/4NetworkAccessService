@@ -39,6 +39,8 @@ export interface IRequestUIFormProps {
   EmpId: string;
   onErrorRequiredFields: () => void;
   onSave: (formData: IServiceRequestFormData) => Promise<void>;
+    OcpApimKey: string;
+  UserRecIdApilink: string;
 }
 const isAr =
   window.location.pathname.includes("/ar/") ||
@@ -237,19 +239,62 @@ EntityDepartment_key:"",
   const _getPeoplePickerItems = async (
     selectedUserProfiles: any[],
     internalName: string,
-     internalName_Text: string
+     internalName_Text: string,
+     internalName_key: string
   ) => {
     if (selectedUserProfiles.length > 0) {
       const emails = selectedUserProfiles[0].id.split("|")[2];
        const title = selectedUserProfiles[0].text;
       handleInputChange(internalName, emails);
       handleInputChange(internalName_Text, title);
+      _getUserRecId(emails, internalName_key);
 
       console.log("Selected userids:", emails);
       console.log("Selected Items:", selectedUserProfiles);
     } else {
       handleInputChange(internalName, "");
       handleInputChange(internalName_Text, "");
+      handleInputChange(internalName_key, "");
+    }
+  };
+   const _getUserRecId = async (email, columnkey) => {
+    try {
+      console.log("_getUserRecId function is called");
+      const response = await fetch(props.UserRecIdApilink, {
+        method: "GET",
+        headers: {
+          "Ocp-Apim-Subscription-Key": props.OcpApimKey,
+          Email: email,
+        },
+      });
+      if (response.ok) {
+        const rawResponse = await response.text();
+        const jsonStart = rawResponse.indexOf("{");
+        if (jsonStart === -1) {
+          throw new Error("JSON not found in response");
+        }
+
+        // Step 2: Extract only the JSON string
+        const jsonString = rawResponse.slice(jsonStart);
+
+        // Step 3: Parse the JSON
+        let parsedData;
+        try {
+          parsedData = JSON.parse(jsonString);
+          console.log("requestRecId Hardware Request:", parsedData);
+        } catch (e) {
+          throw new Error("Failed to parse JSON: " + e.message);
+        }
+        let UserEmail = parsedData.value[0].PrimaryEmail;
+        let RecId = parsedData.value[0].RecId;
+        handleInputChange(columnkey, RecId);
+      }
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Request failed: ${response.status} - ${errorText}`);
+      }
+    } catch (error: any) {
+      console.error("Error getting UserRecId:", error);
     }
   };
   useEffect(() => {
@@ -433,7 +478,7 @@ EntityDepartment_key:"",
                 disabled={false}
                 searchTextLimit={3}
                 onChange={(e) => {
-                  _getPeoplePickerItems(e, "requestedFor","requestedFor_Title");
+                  _getPeoplePickerItems(e, "requestedFor","requestedFor_Title","requestedFor_key");
                 }}
                 principalTypes={[PrincipalType.User]}
                 resolveDelay={1000}
